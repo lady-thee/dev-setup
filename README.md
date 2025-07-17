@@ -9,8 +9,8 @@ This Docker Compose configuration provides a complete local development environm
 ## Quick Start
 
 ### Prerequisites
-- Docker 20.10+
-- Docker Compose 2.0+
+- Docker
+- Docker Compose
 - Unix-like system (Linux/macOS/WSL2)
 
 ### Installation
