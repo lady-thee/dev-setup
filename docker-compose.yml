@@ -23,7 +23,10 @@ services:
   # API Gateway Service (HTTP entry point for clients, translates to RMQ)
   api-gateway: 
     build:
-      context: ../api_gateway 
+      context: ../api_gateway
+      dockerfile: Dockerfile
+      secrets:
+        - npmtoken
     container_name: api_gateway_service
     ports:
       - "3000:3000"
@@ -37,7 +40,7 @@ services:
       - app_network 
     restart: unless-stopped
     healthcheck: 
-      test: ["CMD", "node", "dist/healthcheck.js"]
+      # test: ["CMD", "node", "dist/healthcheck.js"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -48,6 +51,9 @@ services:
     build:
       context: ../auth_service
       target: production
+      dockerfile: Dockerfile
+      secrets:
+        - npmtoken
     container_name: order-auth-app 
     working_dir: /app
     environment:
@@ -69,7 +75,7 @@ services:
       db: # Auth service depends on the database
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "dist/healthcheck.js"]
+      # test: ["CMD", "node", "dist/healthcheck.js"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -121,3 +127,7 @@ services:
 
 volumes:
   order-platform-postgres_data:
+
+secrets:
+  npmtoken:
+    environment: NPM_TOKEN
