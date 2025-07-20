@@ -128,6 +128,7 @@ services:
 volumes:
   order-platform-postgres_data:
 
+
 secrets:
   npmtoken:
     environment: NPM_TOKEN
