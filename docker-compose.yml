@@ -8,7 +8,7 @@ services:
     image: rabbitmq:3-management-alpine
     container_name: rabbitmq_container
     ports:
-      - "5672:5672"
+      - "15671:5672"
       - "15672:15672" 
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
@@ -83,6 +83,45 @@ services:
     restart: unless-stopped
     networks:
       - app_network # Connect to the shared network
+  
+  notification-service:
+    build:
+      context: ../notification_service
+      target: production
+      dockerfile: Dockerfile
+      secrets:
+        - npmtoken
+    container_name: order-notification-app 
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      BREVO_EMAIL: ${BREVO_EMAIL}
+      BREVO_NAME: ${BREVO_NAME}
+      BREVO_API_URL: ${BREVO_API_URL}
+      DB_HOST: db
+      DB_PORT: ${POSTGRES_PORT}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=notification
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      # test: ["CMD", "node", "dist/healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app_network # Connect to the shared network
 
   # PostgreSQL Database Service
   db:
@@ -101,7 +140,7 @@ services:
       retries: 5
       start_period: 10s
     ports:
-      - "5433:5432"
+      - "15432:5432"
     volumes:
       - order-platform-postgres_data:/var/lib/postgresql/data
       - ./postgres/init-scripts:/docker-entrypoint-initdb.d/ 
